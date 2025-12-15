@@ -13,10 +13,10 @@ def load_readme():
 setup(
     name="tutor-contrib-backup",
     use_scm_version=True,
-    url="https://github.com/hastexo/tutor-contrib-backup",
+    url="https://github.com/cleura/tutor-contrib-backup",
     project_urls={
-        "Code": "https://github.com/hastexo/tutor-contrib-backup",
-        "Issue tracker": "https://github.com/hastexo/tutor-contrib-backup/issues",   # noqa: E501
+        "Code": "https://github.com/cleura/tutor-contrib-backup",
+        "Issue tracker": "https://github.com/cleura/tutor-contrib-backup/issues",   # noqa: E501
     },
     license="AGPLv3",
     author="hastexo",

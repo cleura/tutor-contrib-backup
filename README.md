@@ -4,6 +4,8 @@ This is a plugin for [Tutor](https://docs.tutor.overhang.io) that
 provides backup and restore functionality for MySQL, MongoDB, and
 Caddy services in both local and Kubernetes Tutor deployments.
 
+This repository was previously hosted under the `hastexo` GitHub organization, and moved to `cleura` in December 2025 as part of a routine repository consolidation.
+
 In a local deployment, you can run the backup from the command line.
 The backups are stored as a single compressed tar file, named
 `backup.YYYY-MM-DD.tar.xz`, in `$(tutor config
@@ -50,7 +52,7 @@ appropriate one:
 
 ## Installation
 
-    pip install git+https://github.com/hastexo/tutor-contrib-backup@v4.4.0
+    pip install git+https://github.com/cleura/tutor-contrib-backup@v4.4.0
 
 ## Usage
 
@@ -228,7 +230,7 @@ day.
 ### Options related to S3 storage
 
 The following parameters will be pre-populated if the 
-[tutor-contrib-s3](https://github.com/hastexo/tutor-contrib-s3) 
+[tutor-contrib-s3](https://github.com/cleura/tutor-contrib-s3) 
 plugin is enabled in your Tutor deployment. If you don't have that 
 plugin enabled, or you prefer to use a different S3 service or setting for 
 your backup storage, change these configuration parameters:
