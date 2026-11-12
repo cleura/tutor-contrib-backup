@@ -24,6 +24,10 @@ DUMP_DIRECTORY = '/data'
 MYSQL_DUMPFILE = os.path.join(DUMP_DIRECTORY, 'mysql_dump.sql')
 MONGODB_DUMPDIR = os.path.join(DUMP_DIRECTORY, 'mongodb_dump')
 CADDY_DUMPDIR = os.path.join(DUMP_DIRECTORY, 'caddy')
+# Open edX media (uploaded files such as video transcripts) is mounted here,
+# and stored in the archive under data/media.
+MEDIA_DIR = '/openedx-media'
+MEDIA_ARCNAME = 'data/media'
 
 date_stamp = datetime.today().strftime("%Y-%m-%d")
 TARFILE = f'/data/backup/backup.{date_stamp}.tar.xz'
@@ -142,6 +146,16 @@ def caddydump():
     logger.info(f"Complete. {outdir} total size {total_size} bytes.")
 
 
+def check_media():
+    if not os.path.isdir(MEDIA_DIR):
+        raise FileNotFoundError(
+            f"{MEDIA_DIR} is not mounted; cannot back up Open edX media. "
+            "Use --exclude=media to skip it.")
+    total_size = get_size(MEDIA_DIR)
+    logger.info(f"Adding Open edX media {MEDIA_DIR} "
+                f"({total_size} bytes) to the archive")
+
+
 def archive(paths):
     outfile = TARFILE
 
@@ -153,7 +167,11 @@ def archive(paths):
     logger.info(f"Creating archive {outfile}")
     with tarfile.open(outfile, "w:xz") as tar:
         for item in paths:
-            tar.add(item)
+            if isinstance(item, tuple):
+                path, arcname = item
+                tar.add(path, arcname=arcname)
+            else:
+                tar.add(item)
 
     size = os.path.getsize(outfile)
     logger.info(f"Complete. {outfile} is {size} bytes.")
@@ -214,7 +232,7 @@ def upload_to_s3():
 @click.command()
 @click.option(
     '--exclude',
-    type=click.Choice(['mysql', 'mongodb', 'caddy']),
+    type=click.Choice(['mysql', 'mongodb', 'caddy', 'media']),
     multiple=True
 )
 @click.option('--upload', is_flag=True, help="Upload to S3")
@@ -241,6 +259,9 @@ def main(exclude, upload):
     if 'caddy' not in exclude:
         caddydump()
         paths.append(CADDY_DUMPDIR)
+    if 'media' not in exclude:
+        check_media()
+        paths.append((MEDIA_DIR, MEDIA_ARCNAME))
 
     archive(paths)
 

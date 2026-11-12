@@ -97,7 +97,14 @@ To run a backup in a local Tutor deployment:
 tutor local backup
 ```
 
-This creates a tar file containing a dump of the MySQL database, a dump of the MongoDB database, and a copy of the Caddy data directory.
+This creates
+
+- a tar file containing a dump of the MySQL database,
+- a dump of the MongoDB database,
+- a copy of the Caddy data directory, and
+- a copy of the Open edX media directory (which contains locally stored video transcripts and uploaded files).
+
+Use `tutor local backup --exclude=media` to skip the media directory.
 
 You can find the tar file under `$(tutor config printroot)/env/backup/`.
 
