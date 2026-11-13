@@ -24,6 +24,7 @@ backup-job:
     - MYSQL_FLUSH_LOGS={{ BACKUP_MYSQL_FLUSH_LOGS }}
   volumes:
     - ../backup:/data/backup
+    - ../../data/openedx-media:/openedx-media
     {% if ENABLE_HTTPS and ENABLE_WEB_PROXY %}- ../../data/caddy:/caddy{% endif %}
   depends_on:
     {% if RUN_MYSQL %}- mysql{% endif %}

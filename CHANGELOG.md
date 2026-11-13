@@ -1,5 +1,9 @@
 ## Unreleased
 
+* [Enhancement] Back up and restore the Open edX media directory (`data/openedx-media`, which holds locally stored video transcripts and other uploaded files) in local deployments.
+  Use `--exclude=media` to skip it.
+  `tutor local backup` now also accepts `--exclude`.
+  Not yet supported in k8s deployments, where media is always excluded.
 * Add Python 3.13 and 3.14 to the test matrix.
 
 ## Version 4.6.0 (2026-08-25)

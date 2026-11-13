@@ -24,6 +24,8 @@ DUMP_DIRECTORY = '/data'
 MYSQL_DUMPFILE = os.path.join(DUMP_DIRECTORY, 'mysql_dump.sql')
 MONGODB_DUMPDIR = os.path.join(DUMP_DIRECTORY, 'mongodb_dump')
 CADDY_DUMPDIR = os.path.join(DUMP_DIRECTORY, 'caddy')
+MEDIA_DUMPDIR = os.path.join(DUMP_DIRECTORY, 'media')
+MEDIA_DIR = '/openedx-media'
 
 logger = logging.getLogger(__name__)
 
@@ -107,6 +109,31 @@ def restore_caddy():
 
     total_size = get_size(caddy_dir)
     logger.info(f"Complete. {caddy_dir} total size {total_size} bytes.")
+
+
+def restore_media():
+    dump_dir = MEDIA_DUMPDIR
+    if not os.path.isdir(dump_dir):
+        logger.warning(f"Media directory {dump_dir} not found in backup; "
+                       "skipping media restore.")
+        return
+    if not os.path.isdir(MEDIA_DIR):
+        raise FileNotFoundError(
+            f"{MEDIA_DIR} is not mounted; cannot restore Open edX media. "
+            "Use --exclude=media to skip it.")
+
+    logger.info(f"Copying Open edX media from {dump_dir} to {MEDIA_DIR}")
+    shutil.copytree(dump_dir, MEDIA_DIR, dirs_exist_ok=True)
+
+    # Files are extracted as root: give them to the owner of the mount point
+    # so that the (non-root) Open edX processes can read and write them.
+    st = os.stat(MEDIA_DIR)
+    for root, dirs, files in os.walk(MEDIA_DIR):
+        for name in dirs + files:
+            os.lchown(os.path.join(root, name), st.st_uid, st.st_gid)
+
+    total_size = get_size(MEDIA_DIR)
+    logger.info(f"Complete. {MEDIA_DIR} total size {total_size} bytes.")
 
 
 def extract(file_name):
@@ -217,7 +244,7 @@ def get_versions(file_name, number_of_versions=20):
 @click.command()
 @click.option(
     '--exclude',
-    type=click.Choice(['mysql', 'mongodb', 'caddy']),
+    type=click.Choice(['mysql', 'mongodb', 'caddy', 'media']),
     multiple=True
 )
 @click.option('--date', type=click.DateTime(formats=["%Y-%m-%d"]),
@@ -258,6 +285,8 @@ def main(exclude, date, version, download, list_versions):
         restore_mongodb()
     if 'caddy' not in exclude:
         restore_caddy()
+    if 'media' not in exclude:
+        restore_media()
 
 
 if __name__ == '__main__':

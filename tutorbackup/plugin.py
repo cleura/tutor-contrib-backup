@@ -63,27 +63,37 @@ hooks.Filters.IMAGES_PUSH.add_item((
 ))
 
 
-@local_command_group.command(help="Backup MySQL, MongoDB, and Caddy")
+@local_command_group.command(
+    help="Backup MySQL, MongoDB, Caddy, and Open edX media")
 @click.pass_obj
-def backup(context):
+@click.option(
+    '--exclude',
+    type=click.Choice(['mysql', 'mongodb', 'caddy', 'media']),
+    multiple=True,
+    help="Exclude services from backup"
+)
+def backup(context, exclude):
     config = tutor_config.load(context.root)
 
     command = "python backup_services.py"
+    for service in exclude:
+        command += f" --exclude={service}"
     web_proxy_enabled = config["ENABLE_WEB_PROXY"]
     https_enabled = config["ENABLE_HTTPS"]
     caddy_data_directory_exists = web_proxy_enabled and https_enabled
-    if not caddy_data_directory_exists:
+    if not caddy_data_directory_exists and "caddy" not in exclude:
         command += " --exclude=caddy"
 
     job_runner = context.job_runner(config)
     job_runner.run_task(service="backup", command=command)
 
 
-@local_command_group.command(help="Restore MySQL, MongoDB, and Caddy")
+@local_command_group.command(
+    help="Restore MySQL, MongoDB, Caddy, and Open edX media")
 @click.pass_obj
 @click.option(
     '--exclude',
-    type=click.Choice(['mysql', 'mongodb', 'caddy']),
+    type=click.Choice(['mysql', 'mongodb', 'caddy', 'media']),
     multiple=True,
     help="Exclude services from restore"
 )
@@ -112,7 +122,8 @@ def restore(context, exclude, date):
 def backup(context):  # noqa: F811
     config = tutor_config.load(context.root)
 
-    command = "python backup_services.py --upload"
+    # Open edX media is only supported in local deployments for now.
+    command = "python backup_services.py --upload --exclude=media"
     caddy_data_directory_exists = config["ENABLE_WEB_PROXY"]
     if not caddy_data_directory_exists:
         command += " --exclude=caddy"
@@ -130,7 +141,7 @@ def backup(context):  # noqa: F811
               help="Version ID of the backup file")
 @click.option(
     '--exclude',
-    type=click.Choice(['mysql', 'mongodb', 'caddy']),
+    type=click.Choice(['mysql', 'mongodb', 'caddy', 'media']),
     multiple=True,
     help="Exclude services from restore"
 )
@@ -146,6 +157,9 @@ def restore(context, date, version, exclude, list_versions):  # noqa: F811
         command += " --download"
         if version:
             command += f" --version='{version}'"
+
+        # Open edX media is only supported in local deployments for now.
+        exclude = (*exclude, "media")
 
         if 'caddy' not in exclude:
             caddy_data_directory_exists = config["ENABLE_WEB_PROXY"]
